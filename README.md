@@ -1,10 +1,3 @@
-# drone-s3-sync
-
-[![Build Status](http://beta.drone.io/api/badges/drone-plugins/drone-s3-sync/status.svg)](http://beta.drone.io/drone-plugins/drone-s3-sync)
-[![Coverage Status](https://aircover.co/badges/drone-plugins/drone-s3-sync/coverage.svg)](https://aircover.co/drone-plugins/drone-s3-sync)
-[![](https://badge.imagelayers.io/plugins/drone-s3-sync:latest.svg)](https://imagelayers.io/?images=plugins/drone-s3-sync:latest 'Get your own badge on imagelayers.io')
-
-
 ### Example
 
 ```
