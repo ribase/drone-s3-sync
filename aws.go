@@ -1,21 +1,21 @@
 package main
 
 import (
-	"crypto/md5"
-	"fmt"
-	"io"
-	"mime"
-	"os"
-	"path/filepath"
-	"time"
+"crypto/md5"
+"fmt"
+"io"
+"mime"
+"os"
+"path/filepath"
+"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/cloudFront"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/ryanuber/go-glob"
+"github.com/aws/aws-sdk-go/aws"
+"github.com/aws/aws-sdk-go/aws/awserr"
+"github.com/aws/aws-sdk-go/aws/credentials"
+"github.com/aws/aws-sdk-go/aws/session"
+"github.com/aws/aws-sdk-go/service/cloudFront"
+"github.com/aws/aws-sdk-go/service/s3"
+"github.com/ryanuber/go-glob"
 )
 
 type AWS struct {
@@ -69,7 +69,6 @@ func (a *AWS) Upload(local, remote string) error {
 	}
 
 	fileExt := filepath.Ext(local)
-
 	var contentType string
 	if a.vargs.ContentType.IsString() {
 		contentType = a.vargs.ContentType.String()
@@ -83,28 +82,27 @@ func (a *AWS) Upload(local, remote string) error {
 		}
 	}
 
-
-
-	/*
-		Set content encoding in s3 while upload.
-		Use: PutObjectInput->ContentEncoding(string)
-		Works only with files containing an extension with a single dot like ".tgz" not ".tar.gz".
-		- usage
-		publish:
-  			s3_sync:
-				content_encoding:
-      				".jgz": gzip
-      				".cgz": gzip
-      				".tgz": gzip
-	*/
 	var contentEncoding string
 	if a.vargs.ContentEncoding.IsString() {
 		contentEncoding = a.vargs.ContentEncoding.String()
 	} else if !a.vargs.ContentEncoding.IsEmpty() {
-		contentMap := a.vargs.ContentEncoding.Map()
+		encodingMap := a.vargs.ContentEncoding.Map()
+		for patternExt := range encodingMap {
+			if patternExt == fileExt {
+				contentEncoding = encodingMap[patternExt]
+				break
+			}
+		}
+	}
+
+	var cacheControl string
+	if a.vargs.CacheControl.IsString() {
+		cacheControl = a.vargs.CacheControl.String()
+	} else if !a.vargs.CacheControl.IsEmpty() {
+		contentMap := a.vargs.CacheControl.Map()
 		for patternExt := range contentMap {
 			if patternExt == fileExt {
-				contentEncoding = contentMap[patternExt]
+				cacheControl = contentMap[patternExt]
 				break
 			}
 		}
@@ -131,30 +129,37 @@ func (a *AWS) Upload(local, remote string) error {
 		Bucket: aws.String(a.vargs.Bucket),
 		Key:    aws.String(remote),
 	})
-
 	if err != nil && err.(awserr.Error).Code() != "404" {
 		if err.(awserr.Error).Code() == "404" {
 			return err
 		}
 
-		debug("Uploading \"%s\" with Content-Type \"%s\" and permissions \"%s\"", local, contentType, access)
-		_, err = a.client.PutObject(&s3.PutObjectInput{
+		debug("\"%s\" not found in bucket, uploading with Content-Type \"%s\" and permissions \"%s\"", local, contentType, access)
+		var putObject = &s3.PutObjectInput{
 			Bucket:      aws.String(a.vargs.Bucket),
 			Key:         aws.String(remote),
 			Body:        file,
 			ContentType: aws.String(contentType),
-			ContentEncoding: aws.String(contentEncoding),
 			ACL:         aws.String(access),
 			Metadata:    metadata,
-		})
+		}
+
+		if(len(contentEncoding) > 0){
+			putObject.ContentEncoding = aws.String(contentEncoding)
+		}
+		if(len(cacheControl) > 0) {
+			putObject.CacheControl = aws.String(cacheControl)
+		}
+
+		fmt.Printf("%v", putObject)
+
+		_, err = a.client.PutObject(putObject)
 		return err
 	}
-
 
 	hash := md5.New()
 	io.Copy(hash, file)
 	sum := fmt.Sprintf("\"%x\"", hash.Sum(nil))
-
 	if sum == *head.ETag {
 		shouldCopy := false
 
@@ -168,8 +173,23 @@ func (a *AWS) Upload(local, remote string) error {
 			shouldCopy = true
 		}
 
-		if !shouldCopy && contentEncoding != "" {
-			debug("Content-Encoding has changed from to %s", contentEncoding)
+		if !shouldCopy && head.ContentEncoding == nil && contentEncoding != "" {
+			debug("Content-Encoding has changed from unset to %s", contentEncoding)
+			shouldCopy = true
+		}
+
+		if !shouldCopy && head.ContentEncoding != nil && contentEncoding != *head.ContentEncoding {
+			debug("Content-Encoding has changed from %s to %s", *head.ContentEncoding, contentEncoding)
+			shouldCopy = true
+		}
+
+		if !shouldCopy && head.CacheControl == nil && cacheControl != "" {
+			debug("Cache-Control has changed from unset to %s", cacheControl)
+			shouldCopy = true
+		}
+
+		if !shouldCopy && head.CacheControl != nil && cacheControl != *head.CacheControl {
+			debug("Cache-Control has changed from %s to %s", *head.CacheControl, cacheControl)
 			shouldCopy = true
 		}
 
@@ -224,27 +244,32 @@ func (a *AWS) Upload(local, remote string) error {
 		}
 
 		if !shouldCopy {
-
 			debug("Skipping \"%s\" because hashes and metadata match", local)
 			return nil
 		}
 
-		if contentEncoding != "" {
-			debug("Content-Encoding has changed from unset to %s", contentEncoding)
-			shouldCopy = true
-		}
-
 		debug("Updating metadata for \"%s\" Content-Type: \"%s\", ACL: \"%s\"", local, contentType, access)
-		_, err = a.client.CopyObject(&s3.CopyObjectInput{
+		var copyObject = &s3.CopyObjectInput{
 			Bucket:            aws.String(a.vargs.Bucket),
 			Key:               aws.String(remote),
 			CopySource:        aws.String(fmt.Sprintf("%s/%s", a.vargs.Bucket, remote)),
 			ACL:               aws.String(access),
 			ContentType:       aws.String(contentType),
-			ContentEncoding:   aws.String(contentEncoding),
 			Metadata:          metadata,
 			MetadataDirective: aws.String("REPLACE"),
-		})
+		}
+
+
+		if(len(contentEncoding) > 0){
+			copyObject.ContentEncoding = aws.String(contentEncoding)
+		}
+		if(len(cacheControl) > 0) {
+			copyObject.CacheControl = aws.String(cacheControl)
+		}
+
+		fmt.Printf("%v", copyObject)
+
+		_, err = a.client.CopyObject(copyObject)
 		return err
 	} else {
 		_, err = file.Seek(0, 0)
@@ -253,15 +278,25 @@ func (a *AWS) Upload(local, remote string) error {
 		}
 
 		debug("Uploading \"%s\" with Content-Type \"%s\" and permissions \"%s\"", local, contentType, access)
-		_, err = a.client.PutObject(&s3.PutObjectInput{
+		var putObject = &s3.PutObjectInput{
 			Bucket:      aws.String(a.vargs.Bucket),
 			Key:         aws.String(remote),
 			Body:        file,
 			ContentType: aws.String(contentType),
-			ContentEncoding: aws.String(contentEncoding),
 			ACL:         aws.String(access),
 			Metadata:    metadata,
-		})
+		}
+
+		if(len(contentEncoding) > 0){
+			putObject.ContentEncoding = aws.String(contentEncoding)
+		}
+		if(len(cacheControl) > 0) {
+			putObject.CacheControl = aws.String(cacheControl)
+		}
+
+		fmt.Printf("%v", putObject)
+
+		_, err = a.client.PutObject(putObject)
 		return err
 	}
 }
@@ -304,7 +339,7 @@ func (a *AWS) List(path string) ([]string, error) {
 		resp, err = a.client.ListObjects(&s3.ListObjectsInput{
 			Bucket: aws.String(a.vargs.Bucket),
 			Prefix: aws.String(path),
-			Marker: aws.String(remote[len(remote) - 1]),
+			Marker: aws.String(remote[len(remote)-1]),
 		})
 
 		if err != nil {
@@ -335,3 +370,4 @@ func (a *AWS) Invalidate(invalidatePath string) error {
 	})
 	return err
 }
+
