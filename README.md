@@ -59,7 +59,7 @@ publish:
 
 Many thanks to the [The Original Repo](https://github.com/drone-plugins/drone-s3-sync)
 
-Thanks for flaming ans testing[Ghettoboy](https://github.com/yobottehg)
+Thanks for flaming ans testing [Ghettoboy](https://github.com/yobottehg)
 
 ## License
 See LICENSE.md in repository.
