@@ -55,7 +55,7 @@ publish:
 ```
 
 ## Credits
-[Sebastian Thadewald](https://github.com/ribase/)
+[Sebastian Thadewald](https://github.com/ribase/drone-s3-sync)
 
 Many thanks to the [The Original Repo](https://github.com/drone-plugins/drone-s3-sync)
 
