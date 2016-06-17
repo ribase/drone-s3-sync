@@ -1,10 +1,13 @@
+# Drone S3 Sync
+Drone plugin to synchronize a directory with an Amazon S3 Bucket.
+
 ## How to build
 Be sure that a docker process is active then just cd into this repo an type
 ```
 $~: ./buildPush.sh
 ``` 
 
-## What is different from the orginal
+## What is new
 You can add cache properties like `".js": "public, max-age: 10000000"` on every filetype.
 ##### Example
 ```
@@ -23,7 +26,6 @@ You can add encoding properties like `".js": gzip` on every filetype.
 content_encoding:
       ".js": gzip
 ```
-
 
 ## Full usage Example
 A usage example with all available commands
@@ -51,3 +53,6 @@ publish:
     when:
       branch: master
 ```
+
+## Issues?
+[Drop an issue](https://github.com/ribase/drone-s3-sync/issues)
