@@ -2,7 +2,7 @@
 Drone plugin to synchronize a directory with an Amazon S3 Bucket.
 
 ## How to build
-Be sure that a docker process is active, then just `cd` into this repo an type
+Be sure that a docker process is active, then just `cd` into this repo an type.
 ```
 $~: ./buildPush.sh
 ``` 
@@ -28,7 +28,7 @@ content_encoding:
 ```
 
 ## Full usage Example
-A usage example with all available commands
+A usage example with all available commands.
 ```
 publish:
   s3_sync:
@@ -53,6 +53,13 @@ publish:
     when:
       branch: master
 ```
+
+## Credits
+[Sebastian Thadewald](https://github.com/ribase/)
+Many thanks to the [The Original Repo](https://github.com/drone-plugins/drone-s3-sync)
+
+## License
+See LICENSE.md in repository.
 
 ## Issues?
 [Drop an issue](https://github.com/ribase/drone-s3-sync/issues)
