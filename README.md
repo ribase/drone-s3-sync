@@ -7,7 +7,7 @@ Be sure that a docker process is active, then just `cd` into this repo an type.
 $~: ./buildPush.sh
 ``` 
 
-## What is new
+## What's new
 You can add cache properties like `".js": "public, max-age: 10000000"` on every filetype.
 ##### Example:
 ```
