@@ -9,19 +9,19 @@ $~: ./buildPush.sh
 
 ## What is new
 You can add cache properties like `".js": "public, max-age: 10000000"` on every filetype.
-##### Example
+##### Example:
 ```
 cache_control:
       ".js": "public, max-age: 10000000"
 ```
 You can add type properties like `".svg": image/svg+xml` on every filetype.
-##### Example
+##### Example:
 ```
 content_type:
       ".svg": image/svg+xml
 ```
 You can add encoding properties like `".js": gzip` on every filetype.
-##### Example
+##### Example:
 ```
 content_encoding:
       ".js": gzip
