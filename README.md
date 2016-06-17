@@ -1,5 +1,5 @@
 # Drone S3 Sync
-Drone plugin to synchronize a directory with an Amazon S3 Bucket.
+This is a Drone plugin to synchronize a directory with an Amazon S3 Bucket.
 
 ## How to build
 Be sure that a docker process is active, then just `cd` into this repo an type.
@@ -28,7 +28,7 @@ content_encoding:
 ```
 
 ## Full usage Example
-A usage example with all available commands.
+An usage example with all available commands.
 ```
 publish:
   s3_sync:
