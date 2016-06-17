@@ -2,7 +2,7 @@
 Drone plugin to synchronize a directory with an Amazon S3 Bucket.
 
 ## How to build
-Be sure that a docker process is active then just cd into this repo an type
+Be sure that a docker process is active, then just `cd` into this repo an type
 ```
 $~: ./buildPush.sh
 ``` 
