@@ -13,8 +13,8 @@ type PluginArgs struct {
 	Access                 StringMap         `json:"acl"`
 	ContentType            StringMap         `json:"content_type"`
 	ContentEncoding        StringMap         `json:"content_encoding"`
-	SkipFiles        	   StringMap         `json:"skip_files"`
-	SkipPaths        	   StringMap         `json:"skip_paths"`
+	SkipFiles              StringMap         `json:"skip_files"`
+	SkipPaths              StringMap         `json:"skip_paths"`
 	SkipExtensions         StringMap         `json:"skip_extensions"`
 	CacheControl           StringMap         `json:"cache_control"`
 	Metadata               DeepStringMap     `json:"metadata"`

@@ -77,7 +77,6 @@ func (a *app) loadVargs() error {
 
 	err := plugin.Parse()
 	return err
-
 }
 
 func (a *app) createClient() {
