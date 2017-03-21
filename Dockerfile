@@ -3,7 +3,7 @@
 #     CGO_ENABLED=0 go build -a -tags netgo
 #     docker build --rm=true -t plugins/drone-s3-sync .
 
-FROM alpine:3.2
+FROM alpine:3.5
 
 RUN  apk update
 RUN  apk add tzdata
